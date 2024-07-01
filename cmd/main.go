@@ -169,14 +169,24 @@ func sendMessage(c *fiber.Ctx) error {
 	idInstance := c.Get("X-IdInstance")
 	apiTokenInstance := c.Get("X-ApiTokenInstance")
 	if idInstance == "" || apiTokenInstance == "" {
-		log.Println("Несанкционированный запрос: отсутствует idInstance или apiTokenInstance.")
-		return c.Status(fiber.StatusUnauthorized).SendString("Отсутствует заголовок IdInstance или ApiTokenInstance.")
+		log.Println("Unauthorized request: Missing idInstance or apiTokenInstance")
+		return c.Status(fiber.StatusUnauthorized).SendString("IdInstance or ApiTokenInstance header missing")
 	}
 
-	var body map[string]interface{}
+	var body struct {
+		ChatID          string `json:"chatId"`
+		Message         string `json:"message"`
+		QuotedMessageID string `json:"quotedMessageId,omitempty"`
+		LinkPreview     bool   `json:"linkPreview,omitempty"`
+	}
+
 	if err := c.BodyParser(&body); err != nil {
 		log.Printf("Bad request: %v\n", err)
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+	}
+
+	if body.ChatID == "" || body.Message == "" {
+		return c.Status(fiber.StatusBadRequest).SendString("chatId and message are required fields")
 	}
 
 	fullUrl := fmt.Sprintf("%s/waInstance%s/sendMessage/%s", apiUrl, idInstance, apiTokenInstance)
@@ -189,17 +199,29 @@ func sendFileByUrl(c *fiber.Ctx) error {
 	idInstance := c.Get("X-IdInstance")
 	apiTokenInstance := c.Get("X-ApiTokenInstance")
 	if idInstance == "" || apiTokenInstance == "" {
-		log.Println("Несанкционированный запрос: отсутствует idInstance или apiTokenInstance.")
-		return c.Status(fiber.StatusUnauthorized).SendString("Отсутствует заголовок IdInstance или ApiTokenInstance.")
+		log.Println("Unauthorized request: Missing idInstance or apiTokenInstance")
+		return c.Status(fiber.StatusUnauthorized).SendString("IdInstance or ApiTokenInstance header missing")
 	}
 
-	var body map[string]interface{}
+	var body struct {
+		ChatID   string `json:"chatId"`
+		URLFile  string `json:"urlFile"`
+		FileName string `json:"fileName,omitempty"`
+		Caption  string `json:"caption,omitempty"`
+	}
+
 	if err := c.BodyParser(&body); err != nil {
 		log.Printf("Bad request: %v\n", err)
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
+	if body.ChatID == "" || body.URLFile == "" {
+		return c.Status(fiber.StatusBadRequest).SendString("chatId and urlFile are required fields")
+	}
+
 	fullUrl := fmt.Sprintf("%s/waInstance%s/sendFileByUrl/%s", apiMedia, idInstance, apiTokenInstance)
+	pterm.Info.Println(fullUrl)
+	pterm.Info.Println(body)
 	return makeAPIRequest(c, fullUrl, body, "POST", &SendMessageResponse{})
 }
 
@@ -210,14 +232,14 @@ func makeAPIRequest(c *fiber.Ctx, url string, body interface{}, method string, r
 	if body != nil {
 		reqBody, err = json.Marshal(body)
 		if err != nil {
-			log.Printf("Внутренняя ошибка сервера: %v\n", err)
+			log.Printf("Internal server error: %v\n", err)
 			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 		}
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(reqBody))
 	if err != nil {
-		log.Printf("Внутренняя ошибка сервера: %v\n", err)
+		log.Printf("Internal server error: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
@@ -226,28 +248,52 @@ func makeAPIRequest(c *fiber.Ctx, url string, body interface{}, method string, r
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Запрос к API не удался: %v\n", err)
+		log.Printf("Request to API failed: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 	defer resp.Body.Close()
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Не удалось прочитать ответ API.: %v\n", err)
+		log.Printf("Reading API response failed: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	log.Printf("Статус ответа API: %d", resp.StatusCode)
-	log.Printf("Тело ответа API: %s", respBody)
+	log.Printf("API response status: %d", resp.StatusCode)
+	log.Printf("API response body: %s", respBody)
 
 	if resp.StatusCode != http.StatusOK {
+		// Handle specific 466 status code error
+		if resp.StatusCode == 466 {
+			var quotaError struct {
+				InvokeStatus struct {
+					Method string `json:"method"`
+					Used   int    `json:"used"`
+					Total  int    `json:"total"`
+					Status string `json:"status"`
+				} `json:"invokeStatus"`
+				CorrespondentsStatus struct {
+					Method      string `json:"method"`
+					Used        int    `json:"used"`
+					Total       int    `json:"total"`
+					Status      string `json:"status"`
+					Description string `json:"description"`
+				} `json:"correspondentsStatus"`
+			}
+			if err := json.Unmarshal(respBody, &quotaError); err != nil {
+				log.Printf("Decoding quota error response failed: %v\n", err)
+				return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+			}
+			return c.Status(resp.StatusCode).JSON(quotaError)
+		}
+
 		log.Printf("Received non-200 response: %d\n", resp.StatusCode)
-		return c.Status(resp.StatusCode).SendString(fmt.Sprintf("Ответ об ошибке от API: %s", respBody))
+		return c.Status(resp.StatusCode).SendString(fmt.Sprintf("Error response from API: %s", respBody))
 	}
 
 	err = json.Unmarshal(respBody, responseStruct)
 	if err != nil {
-		log.Printf("Не удалось декодировать ответ API.: %v\n", err)
+		log.Printf("Decoding API response failed: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 

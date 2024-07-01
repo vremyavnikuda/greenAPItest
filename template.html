@@ -41,6 +41,8 @@
     <button onclick="callAPI('clearMessagesQueue', 'GET')">clearMessagesQueue</button>
     <input id="phoneNumber" type="text" placeholder="Phone Number">
     <input id="message" type="text" placeholder="Message">
+    <input id="quotedMessageId" type="text" placeholder="Quoted Message ID">
+    <input id="linkPreview" type="checkbox">Link Preview
     <button onclick="callAPI('sendMessage', 'POST')">sendMessage</button>
     <input id="fileUrl" type="text" placeholder="File URL">
     <button onclick="callAPI('sendFileByUrl', 'POST')">sendFileByUrl</button>
@@ -65,13 +67,17 @@
             case 'sendMessage':
                 const phoneNumber = document.getElementById('phoneNumber').value;
                 const message = document.getElementById('message').value;
+                const quotedMessageId = document.getElementById('quotedMessageId').value;
+                const linkPreview = document.getElementById('linkPreview').checked;
                 if (!phoneNumber || !message) {
                     responseElement.value = 'Please provide phone number and message';
                     return;
                 }
                 body = {
                     chatId: `${phoneNumber}@c.us`,
-                    message
+                    message,
+                    quotedMessageId: quotedMessageId || undefined,
+                    linkPreview: linkPreview || undefined
                 };
                 break;
             case 'sendFileByUrl':
