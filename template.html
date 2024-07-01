@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GREEN-API Methods</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+        }
+        .sidebar {
+            width: 30%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .content {
+            width: 70%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        input, button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        textarea {
+            width: 100%;
+            height: 90%;
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <input id="idInstance" type="text" placeholder="idInstance" value="1103953270">
+    <input id="apiTokenInstance" type="text" placeholder="ApiTokenInstance" value="b0ce727a865f403d8b14384d98c1a28cea990cb9170d4e56b2">
+    <button onclick="callAPI('getSettings', 'GET')">getSettings</button>
+    <button onclick="callAPI('getStateInstance', 'GET')">getStateInstance</button>
+    <button onclick="callAPI('showMessagesQueue', 'GET')">showMessagesQueue</button>
+    <button onclick="callAPI('clearMessagesQueue', 'GET')">clearMessagesQueue</button>
+    <input id="phoneNumber" type="text" placeholder="Phone Number">
+    <input id="message" type="text" placeholder="Message">
+    <button onclick="callAPI('sendMessage', 'POST')">sendMessage</button>
+    <input id="fileUrl" type="text" placeholder="File URL">
+    <button onclick="callAPI('sendFileByUrl', 'POST')">sendFileByUrl</button>
+</div>
+<div class="content">
+    <textarea id="response" readonly></textarea>
+</div>
+<script>
+    async function callAPI(endpoint, method) {
+        const idInstance = document.getElementById('idInstance').value;
+        const apiTokenInstance = document.getElementById('apiTokenInstance').value;
+        const responseElement = document.getElementById('response');
+        let body = {};
+        let url = `/${endpoint}`;
+
+        if (!idInstance || !apiTokenInstance) {
+            responseElement.value = 'Please provide idInstance and apiTokenInstance';
+            return;
+        }
+
+        switch (endpoint) {
+            case 'sendMessage':
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                const message = document.getElementById('message').value;
+                if (!phoneNumber || !message) {
+                    responseElement.value = 'Please provide phone number and message';
+                    return;
+                }
+                body = {
+                    chatId: `${phoneNumber}@c.us`,
+                    message
+                };
+                break;
+            case 'sendFileByUrl':
+                const fileUrl = document.getElementById('fileUrl').value;
+                if (!fileUrl) {
+                    responseElement.value = 'Please provide file URL';
+                    return;
+                }
+                body = {
+                    chatId: `${document.getElementById('phoneNumber').value}@c.us`,
+                    urlFile: fileUrl
+                };
+                break;
+            default:
+                url = `/${endpoint}`;
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-IdInstance': idInstance,
+                    'X-ApiTokenInstance': apiTokenInstance
+                },
+                body: method === 'POST' ? JSON.stringify(body) : null
+            });
+            if (!response.ok) {
+                throw new Error(`API request failed with status ${response.status}`);
+            }
+            const data = await response.json();
+            responseElement.value = JSON.stringify(data, null, 2);
+        } catch (error) {
+            responseElement.value = `Error: ${error.message}`;
+        }
+    }
+</script>
+</body>
+</html>
