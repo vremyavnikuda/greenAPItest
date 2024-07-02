@@ -4,54 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GREEN-API Methods</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
             display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
         }
 
-        .sidebar {
-            width: 30%;
-            padding: 10px;
+        .container {
+            width: 60%;
+            padding: 20px;
             box-sizing: border-box;
-        }
-
-        .content {
-            width: 70%;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        input, button {
-            display: block;
-            width: 100%;
-            margin-bottom: 10px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         textarea {
-            width: 100%;
-            height: 90%;
             resize: none;
         }
     </style>
 </head>
 <body>
-<div class="sidebar">
-    <input id="idInstance" type="text" placeholder="idInstance">
-    <input id="apiTokenInstance" type="text" placeholder="ApiTokenInstance">
-    <button onclick="callAPI('getSettings', 'GET')">getSettings</button>
-    <button onclick="callAPI('getStateInstance', 'GET')">getStateInstance</button>
-    <button onclick="callAPI('showMessagesQueue', 'GET')">showMessagesQueue</button>
-    <button onclick="callAPI('clearMessagesQueue', 'GET')">clearMessagesQueue</button>
-    <input id="phoneNumber" type="text" placeholder="Phone Number">
-    <input id="message" type="text" placeholder="Message">
-    <button onclick="callAPI('sendMessage', 'POST')">sendMessage</button>
-    <input id="phoneNumberURL" type="text" placeholder="Phone Number">
-    <input id="fileUrl" type="text" placeholder="File URL">
-    <button onclick="callAPI('proxy/sendFileByUrl', 'POST')">sendFileByUrl</button>
-</div>
-<div class="content">
-    <textarea id="response" readonly></textarea>
+<div class="container">
+    <h2 class="text-center mb-4">GREEN-API Methods</h2>
+    <div class="form-group">
+        <input id="idInstance" type="text" class="form-control" placeholder="idInstance">
+    </div>
+    <div class="form-group">
+        <input id="apiTokenInstance" type="text" class="form-control" placeholder="ApiTokenInstance">
+    </div>
+    <button class="btn btn-primary btn-block mb-2" onclick="callAPI('getSettings', 'GET')">getSettings</button>
+    <button class="btn btn-primary btn-block mb-2" onclick="callAPI('getStateInstance', 'GET')">getStateInstance</button>
+    <button class="btn btn-primary btn-block mb-2" onclick="callAPI('showMessagesQueue', 'GET')">showMessagesQueue</button>
+    <button class="btn btn-primary btn-block mb-2" onclick="callAPI('clearMessagesQueue', 'GET')">clearMessagesQueue</button>
+    <div class="form-group">
+        <input id="phoneNumber" type="text" class="form-control" placeholder="Phone Number">
+    </div>
+    <div class="form-group">
+        <input id="message" type="text" class="form-control" placeholder="Message">
+    </div>
+    <button class="btn btn-success btn-block mb-2" onclick="callAPI('sendMessage', 'POST')">sendMessage</button>
+    <div class="form-group">
+        <input id="phoneNumberURL" type="text" class="form-control" placeholder="Phone Number">
+    </div>
+    <div class="form-group">
+        <input id="fileUrl" type="text" class="form-control" placeholder="File URL">
+    </div>
+    <button class="btn btn-success btn-block mb-4" onclick="callAPI('proxy/sendFileByUrl', 'POST')">sendFileByUrl</button>
+    <div class="form-group">
+        <textarea id="response" class="form-control" rows="10" readonly></textarea>
+    </div>
 </div>
 <script>
     const apiUrl = "http://127.0.0.1:8080"; // Point to your proxy server
