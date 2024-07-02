@@ -6,6 +6,7 @@ import (
 	"github.com/pterm/pterm"
 	"greenAPItest/api"
 	"greenAPItest/models"
+	"os"
 )
 
 func GetStateInstance(c *fiber.Ctx) error {
@@ -13,9 +14,10 @@ func GetStateInstance(c *fiber.Ctx) error {
 	apiTokenInstance := c.Get("X-ApiTokenInstance")
 	if idInstance == "" || apiTokenInstance == "" {
 		pterm.Error.Println("Несанкционированный запрос: отсутствует idInstance или apiTokenInstance.")
-		return c.Status(fiber.StatusUnauthorized).SendString("Отсутствует заголовок IdInstance или ApiTokenInstance..")
+		return c.Status(fiber.StatusUnauthorized).SendString("Отсутствует заголовок IdInstance или ApiTokenInstance.")
 	}
 
+	apiUrl := os.Getenv("API_URL")
 	fullUrl := fmt.Sprintf("%s/waInstance%s/getStateInstance/%s", apiUrl, idInstance, apiTokenInstance)
 	return api.MakeAPIRequest(c, fullUrl, nil, "GET", &models.StateInstanceResponse{})
 }

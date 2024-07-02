@@ -6,6 +6,7 @@ import (
 	"github.com/pterm/pterm"
 	"greenAPItest/api"
 	"greenAPItest/models"
+	"os"
 )
 
 func ShowMessagesQueue(c *fiber.Ctx) error {
@@ -16,6 +17,7 @@ func ShowMessagesQueue(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).SendString("Отсутствует заголовок IdInstance или ApiTokenInstance.")
 	}
 
+	apiUrl := os.Getenv("API_URL")
 	fullUrl := fmt.Sprintf("%s/waInstance%s/showMessagesQueue/%s", apiUrl, idInstance, apiTokenInstance)
 	return api.MakeAPIRequest(c, fullUrl, nil, "GET", &[]models.ShowMessagesQueueResponse{})
 }

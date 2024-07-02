@@ -6,6 +6,7 @@ import (
 	"github.com/pterm/pterm"
 	"greenAPItest/api"
 	"greenAPItest/models"
+	"os"
 )
 
 func SendMessage(c *fiber.Ctx) error {
@@ -30,6 +31,7 @@ func SendMessage(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("ChatId и сообщение являются обязательными полями.")
 	}
 
+	apiUrl := os.Getenv("API_URL")
 	fullUrl := fmt.Sprintf("%s/waInstance%s/sendMessage/%s", apiUrl, idInstance, apiTokenInstance)
 	pterm.Info.Println(fullUrl)
 	pterm.Info.Println(body)

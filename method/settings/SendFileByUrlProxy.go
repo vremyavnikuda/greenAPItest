@@ -6,6 +6,7 @@ import (
 	"github.com/pterm/pterm"
 	"greenAPItest/api"
 	"greenAPItest/models"
+	"os"
 )
 
 func SendFileByUrlProxy(c *fiber.Ctx) error {
@@ -31,9 +32,9 @@ func SendFileByUrlProxy(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("ChatId, urlFile и fileName являются обязательными полями.")
 	}
 
+	sendFileByUrlAPI := os.Getenv("SEND_FILE_BY_URL_API")
 	fullUrl := fmt.Sprintf("%s/waInstance%s/sendFileByUrl/%s", sendFileByUrlAPI, idInstance, apiTokenInstance)
 	pterm.Info.Println(fullUrl)
 	pterm.Info.Println(body)
-	return api.MakeAPIRequestWithHeaders(c, fullUrl, body, "POST", &models.SendMessageResponse{}, idInstance,
-		apiTokenInstance)
+	return api.MakeAPIRequestWithHeaders(c, fullUrl, body, "POST", &models.SendMessageResponse{}, idInstance, apiTokenInstance)
 }

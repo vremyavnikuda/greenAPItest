@@ -4,12 +4,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/template/html/v2"
+	"github.com/joho/godotenv"
 	"github.com/pterm/pterm"
 	"greenAPItest/method/settings"
 	"os"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		pterm.Error.Printf("Error loading .env file: %v", err)
+	}
+
 	engine := html.New("./", ".html")
 
 	app := fiber.New(fiber.Config{
